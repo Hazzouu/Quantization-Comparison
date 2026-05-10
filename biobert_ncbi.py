@@ -62,7 +62,7 @@ print("CELL 2: FP16 Baseline Evaluation")
 print("="*60)
 clear_vram()
 
-MODEL_ID = "alvaroalon2/biobert_genetic_ner"
+MODEL_ID = "alvaroalon2/biobert_diseases_ner"
 DATASET_NAME = "ncbi_disease"
 print("[*] Loading Tokenizer & Dataset...")
 tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
@@ -146,28 +146,27 @@ def eval_loop(batch_size, model, layer5_acts, layer11_acts):
             predictions = preds.cpu().numpy()
             labels = batch['labels'].cpu().numpy()
 
-            # Ensure model's id2label has integer keys to prevent KeyError
-            id2label = {int(k): str(v) for k, v in model.config.id2label.items()}
-            # The NCBI Disease Dictionary
-            dataset_id2label = {0: "O", 1: "B-Disease", 2: "I-Disease"}
+            # 1. Dynamically grab the exact pristine strings from the dataset to avoid typos
+            # (label_list is already extracted from train_split.features["ner_tags"])
+            
+            # 2. The Neural Integer Bridge
+            # Maps Model Output Index -> Dataset Ground Truth Index
+            model_to_dataset_idx = {
+                2: 0,  # Model's '0' (Outside) -> Dataset 'O'
+                0: 1,  # Model's 'B-DISEASE'   -> Dataset 'B-Disease'
+                1: 2   # Model's 'I-DISEASE'   -> Dataset 'I-Disease'
+            }
 
             for i in range(labels.shape[0]):
-                # 1. Ground truth perfectly mapped via dataset dictionary
-                true_labels = [dataset_id2label[int(l)] for l in labels[i] if l != -100]
+                # Extract ground truth strings using the dataset's native indices
+                true_labels = [label_list[int(l)] for l in labels[i] if l != -100]
                 
-                # 2. Extract model's native strings via its own config
-                raw_preds = [id2label[int(p)] for (p, l) in zip(predictions[i], labels[i]) if l != -100]
-                
-                # 3. The String Normalizer: Force model strings to match NCBI format
+                # Remap the model's scrambled integers to the dataset's integers, then extract the string
                 preds = []
-                for rp in raw_preds:
-                    rp_upper = rp.upper()
-                    if rp_upper.startswith("B"): 
-                        preds.append("B-Disease")
-                    elif rp_upper.startswith("I"): 
-                        preds.append("I-Disease")
-                    else: 
-                        preds.append("O")
+                for p, l in zip(predictions[i], labels[i]):
+                    if l != -100:
+                        dataset_idx = model_to_dataset_idx.get(int(p), 0) # Fallback to 0 ("O") if unknown
+                        preds.append(label_list[dataset_idx])
                         
                 all_labels.append(true_labels)
                 all_preds.append(preds)
@@ -269,7 +268,7 @@ print("CELL 3: INT8 Dynamic Evaluation")
 print("="*60)
 clear_vram()
 
-MODEL_ID = "alvaroalon2/biobert_genetic_ner"
+MODEL_ID = "alvaroalon2/biobert_diseases_ner"
 DATASET_NAME = "ncbi_disease"
 print("[*] Loading Tokenizer & Dataset...")
 tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
@@ -354,28 +353,27 @@ def eval_loop_int8(batch_size, model, layer5_acts, layer11_acts):
             predictions = preds.cpu().numpy()
             labels = batch['labels'].cpu().numpy()
 
-            # Ensure model's id2label has integer keys to prevent KeyError
-            id2label = {int(k): str(v) for k, v in model.config.id2label.items()}
-            # The NCBI Disease Dictionary
-            dataset_id2label = {0: "O", 1: "B-Disease", 2: "I-Disease"}
+            # 1. Dynamically grab the exact pristine strings from the dataset to avoid typos
+            # (label_list is already extracted from train_split.features["ner_tags"])
+            
+            # 2. The Neural Integer Bridge
+            # Maps Model Output Index -> Dataset Ground Truth Index
+            model_to_dataset_idx = {
+                2: 0,  # Model's '0' (Outside) -> Dataset 'O'
+                0: 1,  # Model's 'B-DISEASE'   -> Dataset 'B-Disease'
+                1: 2   # Model's 'I-DISEASE'   -> Dataset 'I-Disease'
+            }
 
             for i in range(labels.shape[0]):
-                # 1. Ground truth perfectly mapped via dataset dictionary
-                true_labels = [dataset_id2label[int(l)] for l in labels[i] if l != -100]
+                # Extract ground truth strings using the dataset's native indices
+                true_labels = [label_list[int(l)] for l in labels[i] if l != -100]
                 
-                # 2. Extract model's native strings via its own config
-                raw_preds = [id2label[int(p)] for (p, l) in zip(predictions[i], labels[i]) if l != -100]
-                
-                # 3. The String Normalizer: Force model strings to match NCBI format
+                # Remap the model's scrambled integers to the dataset's integers, then extract the string
                 preds = []
-                for rp in raw_preds:
-                    rp_upper = rp.upper()
-                    if rp_upper.startswith("B"): 
-                        preds.append("B-Disease")
-                    elif rp_upper.startswith("I"): 
-                        preds.append("I-Disease")
-                    else: 
-                        preds.append("O")
+                for p, l in zip(predictions[i], labels[i]):
+                    if l != -100:
+                        dataset_idx = model_to_dataset_idx.get(int(p), 0) # Fallback to 0 ("O") if unknown
+                        preds.append(label_list[dataset_idx])
                         
                 all_labels.append(true_labels)
                 all_preds.append(preds)
@@ -477,7 +475,7 @@ print("CELL 4: INT4 Dynamic Evaluation")
 print("="*60)
 clear_vram()
 
-MODEL_ID = "alvaroalon2/biobert_genetic_ner"
+MODEL_ID = "alvaroalon2/biobert_diseases_ner"
 DATASET_NAME = "ncbi_disease"
 print("[*] Loading Tokenizer & Dataset...")
 tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
@@ -567,28 +565,27 @@ def eval_loop_int4(batch_size, model, layer5_acts, layer11_acts):
             predictions = preds.cpu().numpy()
             labels = batch['labels'].cpu().numpy()
 
-            # Ensure model's id2label has integer keys to prevent KeyError
-            id2label = {int(k): str(v) for k, v in model.config.id2label.items()}
-            # The NCBI Disease Dictionary
-            dataset_id2label = {0: "O", 1: "B-Disease", 2: "I-Disease"}
+            # 1. Dynamically grab the exact pristine strings from the dataset to avoid typos
+            # (label_list is already extracted from train_split.features["ner_tags"])
+            
+            # 2. The Neural Integer Bridge
+            # Maps Model Output Index -> Dataset Ground Truth Index
+            model_to_dataset_idx = {
+                2: 0,  # Model's '0' (Outside) -> Dataset 'O'
+                0: 1,  # Model's 'B-DISEASE'   -> Dataset 'B-Disease'
+                1: 2   # Model's 'I-DISEASE'   -> Dataset 'I-Disease'
+            }
 
             for i in range(labels.shape[0]):
-                # 1. Ground truth perfectly mapped via dataset dictionary
-                true_labels = [dataset_id2label[int(l)] for l in labels[i] if l != -100]
+                # Extract ground truth strings using the dataset's native indices
+                true_labels = [label_list[int(l)] for l in labels[i] if l != -100]
                 
-                # 2. Extract model's native strings via its own config
-                raw_preds = [id2label[int(p)] for (p, l) in zip(predictions[i], labels[i]) if l != -100]
-                
-                # 3. The String Normalizer: Force model strings to match NCBI format
+                # Remap the model's scrambled integers to the dataset's integers, then extract the string
                 preds = []
-                for rp in raw_preds:
-                    rp_upper = rp.upper()
-                    if rp_upper.startswith("B"): 
-                        preds.append("B-Disease")
-                    elif rp_upper.startswith("I"): 
-                        preds.append("I-Disease")
-                    else: 
-                        preds.append("O")
+                for p, l in zip(predictions[i], labels[i]):
+                    if l != -100:
+                        dataset_idx = model_to_dataset_idx.get(int(p), 0) # Fallback to 0 ("O") if unknown
+                        preds.append(label_list[dataset_idx])
                         
                 all_labels.append(true_labels)
                 all_preds.append(preds)
