@@ -4,8 +4,7 @@
 
 # %%
 # Cell 1: Package Installations
-import os
-os.system('pip install transformers datasets accelerate bitsandbytes pynvml torch lm-eval tqdm')
+!pip install transformers datasets accelerate bitsandbytes pynvml torch lm-eval tqdm
 
 # %%
 # Cell 4: FP16 Perplexity & Logits

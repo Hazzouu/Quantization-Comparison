@@ -4,8 +4,7 @@
 
 # %%
 # Cell 1: Package Installations
-import os
-os.system('pip install transformers datasets accelerate bitsandbytes pynvml torch tqdm git+https://github.com/openai/human-eval.git')
+!pip install transformers datasets accelerate bitsandbytes pynvml torch tqdm git+https://github.com/openai/human-eval.git
 
 # %%
 # Cell 2: FP16 HumanEval Batched Generation
@@ -98,7 +97,7 @@ start_time = time.time()
 
 samples = []
 total_generated_tokens = 0
-BATCH_SIZE = 16
+BATCH_SIZE = 32
 
 for i in tqdm(range(0, len(dataset), BATCH_SIZE), desc="Batched Generation"):
     batch = dataset[i:i + BATCH_SIZE]
@@ -200,7 +199,7 @@ start_time = time.time()
 
 samples = []
 total_generated_tokens = 0
-BATCH_SIZE = 16
+BATCH_SIZE = 32
 
 for i in tqdm(range(0, len(dataset), BATCH_SIZE), desc="Batched Generation"):
     batch = dataset[i:i + BATCH_SIZE]
@@ -306,7 +305,7 @@ start_time = time.time()
 
 samples = []
 total_generated_tokens = 0
-BATCH_SIZE = 16
+BATCH_SIZE = 32
 
 for i in tqdm(range(0, len(dataset), BATCH_SIZE), desc="Batched Generation"):
     batch = dataset[i:i + BATCH_SIZE]
