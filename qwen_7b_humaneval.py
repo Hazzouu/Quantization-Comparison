@@ -173,7 +173,9 @@ ppl_val = torch.exp(torch.stack(nlls).mean()).item()
 
 print("[*] Extracting HumanEval Logits (100 samples) for KL...")
 kl_dataset = dataset.select(range(100))
-kl_inputs = tokenizer(kl_dataset["prompt"], return_tensors="pt", padding=True, truncation=True, max_length=256).to("cuda")
+# Force conversion to a pristine Python list of strings to bypass pyarrow conflicts
+kl_prompts = [str(p) for p in kl_dataset["prompt"]]
+kl_inputs = tokenizer(kl_prompts, return_tensors="pt", padding=True, truncation=True, max_length=256).to("cuda")
 with torch.no_grad():
     kl_outputs = model_fp16(**kl_inputs)
 torch.save(kl_outputs.logits.cpu(), "qwen_7b_humaneval_fp16_logits.pt")
@@ -198,6 +200,9 @@ print(f"Tokens/Sec: {t_per_s:.2f} t/s")
 print(f"Avg Power:  {avg_power:.2f} W")
 print(f"Peak VRAM:  {peak_vram:.2f} GB")
 
+for var in ['inputs', 'generated_ids', 'wiki_encodings', 'input_ids', 'target_ids', 'outputs', 'kl_prompts', 'kl_inputs', 'kl_outputs', 'nlls', 'batch']:
+    if var in globals():
+        del globals()[var]
 del model_fp16
 clear_vram()
 
@@ -366,7 +371,9 @@ ppl_val = torch.exp(torch.stack(nlls).mean()).item()
 
 print("[*] Extracting HumanEval Logits (100 samples) for KL...")
 kl_dataset = dataset.select(range(100))
-kl_inputs = tokenizer(kl_dataset["prompt"], return_tensors="pt", padding=True, truncation=True, max_length=256).to("cuda")
+# Force conversion to a pristine Python list of strings to bypass pyarrow conflicts
+kl_prompts = [str(p) for p in kl_dataset["prompt"]]
+kl_inputs = tokenizer(kl_prompts, return_tensors="pt", padding=True, truncation=True, max_length=256).to("cuda")
 with torch.no_grad():
     kl_outputs = model_int8(**kl_inputs)
 torch.save(kl_outputs.logits.cpu(), "qwen_7b_humaneval_int8_logits.pt")
@@ -391,6 +398,9 @@ print(f"Tokens/Sec: {t_per_s:.2f} t/s")
 print(f"Avg Power:  {avg_power:.2f} W")
 print(f"Peak VRAM:  {peak_vram:.2f} GB")
 
+for var in ['inputs', 'generated_ids', 'wiki_encodings', 'input_ids', 'target_ids', 'outputs', 'kl_prompts', 'kl_inputs', 'kl_outputs', 'nlls', 'batch']:
+    if var in globals():
+        del globals()[var]
 del model_int8
 clear_vram()
 
@@ -564,7 +574,9 @@ ppl_val = torch.exp(torch.stack(nlls).mean()).item()
 
 print("[*] Extracting HumanEval Logits (100 samples) for KL...")
 kl_dataset = dataset.select(range(100))
-kl_inputs = tokenizer(kl_dataset["prompt"], return_tensors="pt", padding=True, truncation=True, max_length=256).to("cuda")
+# Force conversion to a pristine Python list of strings to bypass pyarrow conflicts
+kl_prompts = [str(p) for p in kl_dataset["prompt"]]
+kl_inputs = tokenizer(kl_prompts, return_tensors="pt", padding=True, truncation=True, max_length=256).to("cuda")
 with torch.no_grad():
     kl_outputs = model_int4(**kl_inputs)
 torch.save(kl_outputs.logits.cpu(), "qwen_7b_humaneval_int4_logits.pt")
@@ -589,6 +601,9 @@ print(f"Tokens/Sec: {t_per_s:.2f} t/s")
 print(f"Avg Power:  {avg_power:.2f} W")
 print(f"Peak VRAM:  {peak_vram:.2f} GB")
 
+for var in ['inputs', 'generated_ids', 'wiki_encodings', 'input_ids', 'target_ids', 'outputs', 'kl_prompts', 'kl_inputs', 'kl_outputs', 'nlls', 'batch']:
+    if var in globals():
+        del globals()[var]
 del model_int4
 clear_vram()
 
