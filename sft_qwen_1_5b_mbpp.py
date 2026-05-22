@@ -221,7 +221,7 @@ try:
     for i in tqdm(range(0, len(mbpp_data), BATCH_SIZE), desc="MBPP Generation"):
         batch = mbpp_data[i:i + BATCH_SIZE]
         task_ids = [item[0] for item in batch]
-        prompts = [item[1]["prompt"] for item in batch]
+        prompts = [f"Prompt: Complete the following Python code:\n{item[1]['prompt']}\n\nCode:\n{item[1]['prompt']}" for item in batch]
         inputs = tokenizer(prompts, return_tensors="pt", padding=True).to("cuda")
         input_length = inputs.input_ids.shape[1]
         with torch.no_grad():
@@ -378,7 +378,7 @@ total_generated_tokens = 0
 try:
     for i in tqdm(range(0, len(he_dataset), BATCH_SIZE), desc="HumanEval Generation"):
         batch = he_dataset[i:i + BATCH_SIZE]
-        prompts = batch["prompt"]
+        prompts = [f"Prompt: Complete the following Python code:\n{p}\n\nCode:\n{p}" for p in batch["prompt"]]
         task_ids = batch["task_id"]
         inputs = tokenizer(prompts, return_tensors="pt", padding=True).to("cuda")
         input_length = inputs.input_ids.shape[1]
@@ -608,11 +608,15 @@ print("[*] Loading Logits from disk...")
 fp16_logits = torch.load("sft_qwen_1_5b_mbpp_fp16_logits.pt")
 qlora_logits = torch.load("sft_qwen_1_5b_mbpp_qlora_logits.pt")
 
-def compute_kl(logits_p, logits_q):
-    p = F.softmax(logits_p, dim=-1)
-    log_q = F.log_softmax(logits_q, dim=-1)
-    kl = F.kl_div(log_q, p, reduction='batchmean', log_target=False).item()
+vocab_size = fp16_logits.size(-1)
+
+def compute_kl(logits_p, logits_q, vocab_size):
+    flat_p = logits_p.view(-1, vocab_size)
+    flat_q = logits_q.view(-1, vocab_size)
+    p_probs = F.softmax(flat_p, dim=-1)
+    q_log_probs = F.log_softmax(flat_q, dim=-1)
+    kl = F.kl_div(q_log_probs, p_probs, reduction='batchmean').item()
     return kl
 
-kl_div = compute_kl(fp16_logits, qlora_logits)
+kl_div = compute_kl(fp16_logits, qlora_logits, vocab_size)
 print(f"\n[EVAL] KL Divergence: {kl_div:.4f}\n")
